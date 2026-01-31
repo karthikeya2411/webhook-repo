@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Webhook Monitor</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; padding: 40px; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #333; }
+        .event { border-bottom: 1px solid #eee; padding: 15px 0; font-size: 16px; }
+        .event:last-child { border: none; }
+        .timestamp { color: #888; font-size: 12px; }
+        .author { font-weight: bold; color: #2c3e50; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Latest GitHub Events</h2>
+        <div id="event-list">Loading events...</div>
+    </div>
+
+    <script>
+        function fetchEvents() {
+            fetch('/webhook/events')
+                .then(response => response.json())
+                .then(data => {
+                    const list = document.getElementById('event-list');
+                    list.innerHTML = ''; 
+                    data.forEach(event => {
+                        let message = "";
+                        if (event.action === "PUSH") {
+                            message = `<span class="author">${event.author}</span> pushed to "${event.to_branch}"`;
+                        } else if (event.action === "PULL_REQUEST") {
+                            message = `<span class="author">${event.author}</span> submitted a pull request from "${event.from_branch}" to "${event.to_branch}"`;
+                        }
+                        
+                        list.innerHTML += `
+                            <div class="event">
+                                <p>${message} on ${event.timestamp} UTC</p>
+                            </div>`;
+                    });
+                });
+        }
+
+        // Run immediately, then every 15 seconds
+        fetchEvents();
+        setInterval(fetchEvents, 15000);
+    </script>
+</body>
+</html>
